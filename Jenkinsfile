@@ -1,50 +1,47 @@
-pipeline{
-    agent any
+environment {
+    FRONTEND_IMAGE = "tejasbi/frontend-images"
+    BACKEND_IMAGE  = "tejasbi/backend-images"
+    VERSION        = "v${env.BUILD_NUMBER}"
+}
 
-    environment {
-        FRONTEND_IMAGE = "tejasbi/web-app-registry/frontend-images",
-        BACKEND_IMAGE = "tejasbi/web-app-registry/backend-images",
-        DOCKER_CREDS = credentials("dockerhub-credentials-id"),
-        VERSION = "${env.BUILD_NUMBER}"
-    }
+stages {
 
-    stage("Checkout"){
+    stage("Checkout") {
         steps {
             checkout scm
         }
     }
 
-    stage("Build Backend Image"){
+    stage("Build Backend Image") {
         steps {
             dir('backend') {
                 script {
-                    docker.build("${BACKEND_IMAGE}:v${VERSION}")
+                    docker.build("${BACKEND_IMAGE}:${VERSION}")
                 }
             }
         }
     }
 
-    stage("Build Frontend Image"){
+    stage("Build Frontend Image") {
         steps {
             dir('frontend') {
                 script {
-                    docker.build("${FRONTEND_IMAGE}:v${VERSION}")
+                    docker.build("${FRONTEND_IMAGE}:${VERSION}")
                 }
             }
         }
     }
 
-    stage("Push Image Docker Hub"){
+    stage("Push Images to Docker Hub") {
         steps {
             script {
-                docker.withRegistry('', "dockerhub-credentials-id") {
+                docker.withRegistry('', 'dockerhub-credentials-id') {
 
                     docker.image("${BACKEND_IMAGE}:${VERSION}").push()
                     docker.image("${BACKEND_IMAGE}:${VERSION}").push('latest')
 
                     docker.image("${FRONTEND_IMAGE}:${VERSION}").push()
                     docker.image("${FRONTEND_IMAGE}:${VERSION}").push('latest')
-
                 }
             }
         }
