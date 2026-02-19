@@ -2,8 +2,8 @@ pipeline {
     agent any
 
     environment {
-        FRONTEND_IMAGE = "tejasbi/frontend-images"
-        BACKEND_IMAGE  = "tejasbi/backend-images"
+        FRONTEND_IMAGE = "tejasbi/web-app-registry/frontend-images"
+        BACKEND_IMAGE  = "tejasbi/web-app-registry/backend-images"
         VERSION        = "v${env.BUILD_NUMBER}"
     }
 
