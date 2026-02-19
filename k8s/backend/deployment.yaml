@@ -21,8 +21,8 @@ spec:
           ports:
             - containerPort: 5000
           envFrom:
-            - secretRef: 
-              name: backend-env
+            - secretRef:
+                name: backend-env
           resources:
             requests:
               cpu: "100m"
