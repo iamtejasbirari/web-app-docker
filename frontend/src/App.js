@@ -6,7 +6,7 @@ function App() {
 
   useEffect(() => {
     const fetchData = async () => {
-      const res = await axios.get("http://localhost:5000/api/users");
+      const res = await axios.get("/api/users");
       setData(res.data);
     };
     fetchData();
@@ -14,6 +14,7 @@ function App() {
 
   return (
     <div className="App">
+      <h1>Data</h1>
       {data.map((user) => (
         <div key={user._id}>
           <h2>{user.name}</h2>
