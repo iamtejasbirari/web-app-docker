@@ -9,8 +9,6 @@ pipeline {
         FRONTEND_IMAGE = "tejasbi/frontend-images"
         BACKEND_IMAGE  = "tejasbi/backend-images"
         VERSION        = "v${env.BUILD_NUMBER}"
-        BUILD_BACKEND  = "false"
-        BUILD_FRONTEND = "false"
     }
 
     stages {
@@ -21,21 +19,48 @@ pipeline {
             }
         }
 
+        stage("Detect Changes") {
+            steps {
+                script {
+                    def changedFiles = sh(
+                        script: "git diff --name-only HEAD~1 HEAD || true",
+                        returnStdout: true
+                    ).trim()
+
+                    echo "Changed files:\n${changedFiles}"
+
+                    env.BUILD_BACKEND = "false"
+                    env.BUILD_FRONTEND = "false"
+
+                    if (params.FORCE_BUILD) {
+                        env.BUILD_BACKEND = "true"
+                        env.BUILD_FRONTEND = "true"
+                    } else {
+                        if (changedFiles.contains("backend/")) {
+                            env.BUILD_BACKEND = "true"
+                        }
+                        if (changedFiles.contains("frontend/")) {
+                            env.BUILD_FRONTEND = "true"
+                        }
+                    }
+
+                    echo "BUILD_BACKEND=${env.BUILD_BACKEND}"
+                    echo "BUILD_FRONTEND=${env.BUILD_FRONTEND}"
+                }
+            }
+        }
+
         stage("Build Services") {
             parallel {
 
                 stage("Build Backend") {
                     when {
-                        anyOf{
-                            changeset "backend/**"
-                            expression { params.FORCE_BUILD }
-                        }
+                        expression { env.BUILD_BACKEND == "true" }
                     }
                     steps {
                         dir('backend') {
                             script {
                                 docker.build("${BACKEND_IMAGE}:${VERSION}")
-                                env.BUILD_BACKEND = "true"
                             }
                         }
                     }
@@ -43,16 +68,12 @@ pipeline {
 
                 stage("Build Frontend") {
                     when {
-                        anyOf{
-                            changeset "frontend/**"
-                            expression { params.FORCE_BUILD }
-                        }
+                        expression { env.BUILD_FRONTEND == "true" }
                     }
                     steps {
                         dir('frontend') {
                             script {
                                 docker.build("${FRONTEND_IMAGE}:${VERSION}")
-                                env.BUILD_FRONTEND = "true"
                             }
                         }
                     }
@@ -61,6 +82,12 @@ pipeline {
         }
 
         stage("Push Images") {
+            when {
+                anyOf {
+                    expression { env.BUILD_BACKEND == "true" }
+                    expression { env.BUILD_FRONTEND == "true" }
+                }
+            }
             steps {
                 script {
                     docker.withRegistry('', 'dockerhub-credentials-id') {
