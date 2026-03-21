@@ -1,6 +1,10 @@
 pipeline {
     agent any
 
+    parameters { 
+        booleanParam(name: 'FORCE_BUILD', defaultValue: false, description: 'Force rebuild images') 
+    }
+
     environment {
         FRONTEND_IMAGE = "tejasbi/frontend-images"
         BACKEND_IMAGE  = "tejasbi/backend-images"
@@ -22,7 +26,10 @@ pipeline {
 
                 stage("Build Backend") {
                     when {
-                        changeset "backend/**"
+                        anyOf{
+                            changeset "backend/**"
+                            expression { params.FORCE_BUILD }
+                        }
                     }
                     steps {
                         dir('backend') {
@@ -36,7 +43,10 @@ pipeline {
 
                 stage("Build Frontend") {
                     when {
-                        changeset "frontend/**"
+                        anyOf{
+                            changeset "frontend/**"
+                            expression { params.FORCE_BUILD }
+                        }
                     }
                     steps {
                         dir('frontend') {
