@@ -14,7 +14,7 @@ function App() {
 
   return (
     <div className="App">
-      <h1>Data</h1>
+      <h1>Users</h1>
       {data.map((user) => (
         <div key={user._id}>
           <h2>{user.name}</h2>
