@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: tejasbi/frontend-images:latest
+          image: tejasbi/frontend-images:v13
           imagePullPolicy: Always
           ports:
             - containerPort: 80

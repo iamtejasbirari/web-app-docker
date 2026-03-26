@@ -94,14 +94,41 @@ pipeline {
 
                         if (env.BUILD_BACKEND == "true") {
                             docker.image("${BACKEND_IMAGE}:${VERSION}").push()
-                            docker.image("${BACKEND_IMAGE}:${VERSION}").push('latest')
                         }
 
                         if (env.BUILD_FRONTEND == "true") {
                             docker.image("${FRONTEND_IMAGE}:${VERSION}").push()
-                            docker.image("${FRONTEND_IMAGE}:${VERSION}").push('latest')
                         }
                     }
+                }
+            }
+        }
+
+        stage("Update K8s Manifests") {
+            when {
+                anyOf {
+                    expression { env.BUILD_BACKEND == "true" }
+                    expression { env.BUILD_FRONTEND == "true" }
+                }
+            }
+            steps {
+                script {
+                    sh """
+                    git config user.name "itamicorp"
+                    git config user.email "iamtejasbirari@gmail.com"
+
+                    if [ "${BUILD_BACKEND}" = "true" ]; then
+                    sed -i 's|tejasbi/backend-images:.*|tejasbi/backend-images:${VERSION}|' k8s/backend/deployment.yaml
+                    fi
+
+                    if [ "${BUILD_FRONTEND}" = "true" ]; then
+                    sed -i 's|tejasbi/frontend-images:.*|tejasbi/frontend-images:${VERSION}|' k8s/frontend/deployment.yaml
+                    fi
+
+                    git add k8s/
+                    git commit -m "Update images to ${VERSION}" || true
+                    git push origin main
+                    """
                 }
             }
         }
