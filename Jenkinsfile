@@ -117,6 +117,8 @@ pipeline {
                     git config user.name "itamicorp"
                     git config user.email "iamtejasbirari@gmail.com"
 
+                    git checkout main || git checkout -b main origin/main
+
                     if [ "${BUILD_BACKEND}" = "true" ]; then
                     sed -i 's|tejasbi/backend-images:.*|tejasbi/backend-images:${VERSION}|' k8s/backend/deployment.yaml
                     fi
@@ -126,7 +128,9 @@ pipeline {
                     fi
 
                     git add k8s/
+                    
                     git commit -m "Update images to ${VERSION}" || true
+
                     git push origin main
                     """
                 }
